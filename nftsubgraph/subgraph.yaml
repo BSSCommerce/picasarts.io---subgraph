@@ -1,0 +1,20 @@
+specVersion: 0.0.2
+description: Subgraph for nft contract
+repository: https://github.com/dungntbss/picasarts-subgraph
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: near
+    name: receipts
+    network: near-testnet
+    source:
+      account: "dungbss.testnet"
+      startBlock: 82496706
+    mapping:
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - ExampleEntity
+      receiptHandlers:
+        - handler: handleReceipt
+      file: ./src/mapping.ts
