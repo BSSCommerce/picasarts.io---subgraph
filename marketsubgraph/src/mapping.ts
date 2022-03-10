@@ -1,34 +1,193 @@
-import { near, BigInt } from "@graphprotocol/graph-ts"
-import { ExampleEntity } from "../generated/schema"
+import { near, log, json, JSONValueKind, BigInt } from "@graphprotocol/graph-ts";
+import { Activity } from "../generated/schema";
+export function handleReceipt(receipt: near.ReceiptWithOutcome): void {
+  const actions = receipt.receipt.actions;
 
-export function handleReceipt(
-  receiptWithOutcome: near.ReceiptWithOutcome
+  for (let i = 0; i < actions.length; i++) {
+    handleAction(
+      actions[i],
+      receipt.receipt,
+      receipt.block.header,
+      receipt.outcome
+    );
+  }
+}
+
+function handleAction(
+  action: near.ActionValue,
+  receipt: near.ActionReceipt,
+  blockHeader: near.BlockHeader,
+  outcome: near.ExecutionOutcome
 ): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(receiptWithOutcome.receipt.id.toHex())
-
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(receiptWithOutcome.receipt.id.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
+  if (action.kind != near.ActionKind.FUNCTION_CALL) {
+    log.info("Early return: {}", ["Not a function call"])
+    return
   }
 
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
+  const functionCall = action.toFunctionCall();
 
-  // Entity fields can be set based on receipt information
-  entity.block = receiptWithOutcome.block.header.hash
+  if (functionCall.methodName == "offer") {
+    const receiptId = receipt.id.toBase58()
+    // Maps the JSON formatted log to the LOG entity
+    let activity = new Activity(`${receiptId}`)
 
-  // Entities can be written to the store with `.save()`
-  entity.save()
+    // Standard receipt properties
+    activity.blockTime = BigInt.fromU64(blockHeader.timestampNanosec / 1000000)
+    activity.from = receipt.signerId
+    // Log Parsing
+    if (outcome.logs != null && outcome.logs.length > 0) {
+      if(outcome.logs[0].split(':')[0] == '{"type"'){
+        let parsed = json.fromString(outcome.logs[0])
+        if(parsed.kind == JSONValueKind.OBJECT){
 
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
+          let entry = parsed.toObject()          
+          // Standard receipt properties
+          activity.blockTime = BigInt.fromU64(blockHeader.timestampNanosec/1000000)
+          activity.from = receipt.signerId
+          // types JSON
+          // paras had some non-NEP 171 logs early on
+          for(let i = 0; i < entry.entries.length; i++){
+            let key = entry.entries[i].key.toString()
+            switch (true) {
+              case key == 'type':
+                activity.type = entry.entries[i].value.toString()
+                break
+              case key == 'params':
+                let paramObject = entry.entries[i].value.toObject()
+                for(let m = 0; m < paramObject.entries.length; m++){
+                  let key = paramObject.entries[m].key.toString()
+                  switch (true) {
+                    case key == 'token_id':
+                      activity.token_id = paramObject.entries[m].value.toString()
+                      break
+                    case key == 'ft_token_id':
+                      activity.token_id = paramObject.entries[m].value.toString()
+                      break
+                    case key == 'price':
+                      activity.price = paramObject.entries[m].value.kind != JSONValueKind.NULL ? BigInt.fromString(paramObject.entries[m].value.toString()) : null
+                      break
+                    case key == 'owner_id':
+                      activity.to = paramObject.entries[m].value.toString()
+                      break
+                  }
+                }
+            }
+          }
+        }
+        activity.save()
+      }
+    }
+
+  } else {
+    log.info("Not processed - FunctionCall is: {}", [functionCall.methodName]);
+  }
+
+  if (functionCall.methodName == "accept_offer") {
+    const receiptId = receipt.id.toBase58()
+    // Maps the JSON formatted log to the LOG entity
+    let activity = new Activity(`${receiptId}`)
+
+    // Standard receipt properties
+    activity.blockTime = BigInt.fromU64(blockHeader.timestampNanosec / 1000000)
+    activity.from = receipt.signerId
+    // Log Parsing
+    if (outcome.logs != null && outcome.logs.length > 0) {
+      if(outcome.logs[0].split(':')[0] == '{"type"'){
+        let parsed = json.fromString(outcome.logs[0])
+        if(parsed.kind == JSONValueKind.OBJECT){
+
+          let entry = parsed.toObject()          
+          // Standard receipt properties
+          activity.blockTime = BigInt.fromU64(blockHeader.timestampNanosec/1000000)
+          activity.from = receipt.signerId
+          // types JSON
+          // paras had some non-NEP 171 logs early on
+          for(let i = 0; i < entry.entries.length; i++){
+            let key = entry.entries[i].key.toString()
+            switch (true) {
+              case key == 'type':
+                activity.type = entry.entries[i].value.toString()
+                break
+              case key == 'params':
+                let paramObject = entry.entries[i].value.toObject()
+                for(let m = 0; m < paramObject.entries.length; m++){
+                  let key = paramObject.entries[m].key.toString()
+                  switch (true) {
+                    case key == 'token_id':
+                      activity.token_id = paramObject.entries[m].value.toString()
+                      break
+                    case key == 'ft_token_id':
+                      activity.token_id = paramObject.entries[m].value.toString()
+                      break
+                    case key == 'price':
+                      activity.price = paramObject.entries[m].value.kind != JSONValueKind.NULL ? BigInt.fromString(paramObject.entries[m].value.toString()) : null
+                      break
+                    case key == 'new_owner_id':
+                      activity.to = paramObject.entries[m].value.toString()
+                      break
+                  }
+                }
+            }
+          }
+        }
+        activity.save()
+      }
+    }
+
+  } else {
+    log.info("Not processed - FunctionCall is: {}", [functionCall.methodName]);
+  }
+
+  if (functionCall.methodName == "update_price") {
+    const receiptId = receipt.id.toBase58()
+    // Maps the JSON formatted log to the LOG entity
+    let activity = new Activity(`${receiptId}`)
+
+    // Standard receipt properties
+    activity.blockTime = BigInt.fromU64(blockHeader.timestampNanosec / 1000000)
+    activity.from = receipt.signerId
+    // Log Parsing
+    if (outcome.logs != null && outcome.logs.length > 0) {
+      if(outcome.logs[0].split(':')[0] == '{"type"'){
+        let parsed = json.fromString(outcome.logs[0])
+        if(parsed.kind == JSONValueKind.OBJECT){
+
+          let entry = parsed.toObject()          
+          // Standard receipt properties
+          activity.blockTime = BigInt.fromU64(blockHeader.timestampNanosec/1000000)
+          activity.from = receipt.signerId
+          // types JSON
+          // paras had some non-NEP 171 logs early on
+          for(let i = 0; i < entry.entries.length; i++){
+            let key = entry.entries[i].key.toString()
+            switch (true) {
+              case key == 'type':
+                activity.type = entry.entries[i].value.toString()
+                break
+              case key == 'params':
+                let paramObject = entry.entries[i].value.toObject()
+                for(let m = 0; m < paramObject.entries.length; m++){
+                  let key = paramObject.entries[m].key.toString()
+                  switch (true) {
+                    case key == 'token_id':
+                      activity.token_id = paramObject.entries[m].value.toString()
+                      break
+                    case key == 'ft_token_id':
+                      activity.token_id = paramObject.entries[m].value.toString()
+                      break
+                    case key == 'price':
+                      activity.price = paramObject.entries[m].value.kind != JSONValueKind.NULL ? BigInt.fromString(paramObject.entries[m].value.toString()) : null
+                      break
+                  }
+                }
+            }
+          }
+        }
+        activity.save()
+      }
+    }
+
+  } else {
+    log.info("Not processed - FunctionCall is: {}", [functionCall.methodName]);
+  }
 }

@@ -11,30 +11,27 @@ import {
   BigDecimal
 } from "@graphprotocol/graph-ts";
 
-export class ExampleEntity extends Entity {
+export class Activity extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
-
-    this.set("block", Value.fromBytes(Bytes.empty()));
-    this.set("count", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save ExampleEntity entity without an ID");
+    assert(id != null, "Cannot save Activity entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.STRING,
-        "Cannot save ExampleEntity entity with non-string ID. " +
+        "Cannot save Activity entity with non-string ID. " +
           'Considering using .toHex() to convert the "id" to a string.'
       );
-      store.set("ExampleEntity", id.toString(), this);
+      store.set("Activity", id.toString(), this);
     }
   }
 
-  static load(id: string): ExampleEntity | null {
-    return changetype<ExampleEntity | null>(store.get("ExampleEntity", id));
+  static load(id: string): Activity | null {
+    return changetype<Activity | null>(store.get("Activity", id));
   }
 
   get id(): string {
@@ -46,21 +43,122 @@ export class ExampleEntity extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get block(): Bytes {
-    let value = this.get("block");
-    return value!.toBytes();
+  get type(): string | null {
+    let value = this.get("type");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
   }
 
-  set block(value: Bytes) {
-    this.set("block", Value.fromBytes(value));
+  set type(value: string | null) {
+    if (!value) {
+      this.unset("type");
+    } else {
+      this.set("type", Value.fromString(<string>value));
+    }
   }
 
-  get count(): BigInt {
-    let value = this.get("count");
-    return value!.toBigInt();
+  get token_id(): string | null {
+    let value = this.get("token_id");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
   }
 
-  set count(value: BigInt) {
-    this.set("count", Value.fromBigInt(value));
+  set token_id(value: string | null) {
+    if (!value) {
+      this.unset("token_id");
+    } else {
+      this.set("token_id", Value.fromString(<string>value));
+    }
+  }
+
+  get from(): string | null {
+    let value = this.get("from");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set from(value: string | null) {
+    if (!value) {
+      this.unset("from");
+    } else {
+      this.set("from", Value.fromString(<string>value));
+    }
+  }
+
+  get to(): string | null {
+    let value = this.get("to");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set to(value: string | null) {
+    if (!value) {
+      this.unset("to");
+    } else {
+      this.set("to", Value.fromString(<string>value));
+    }
+  }
+
+  get price(): BigInt | null {
+    let value = this.get("price");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set price(value: BigInt | null) {
+    if (!value) {
+      this.unset("price");
+    } else {
+      this.set("price", Value.fromBigInt(<BigInt>value));
+    }
+  }
+
+  get ft_token_id(): string | null {
+    let value = this.get("ft_token_id");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set ft_token_id(value: string | null) {
+    if (!value) {
+      this.unset("ft_token_id");
+    } else {
+      this.set("ft_token_id", Value.fromString(<string>value));
+    }
+  }
+
+  get blockTime(): BigInt | null {
+    let value = this.get("blockTime");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set blockTime(value: BigInt | null) {
+    if (!value) {
+      this.unset("blockTime");
+    } else {
+      this.set("blockTime", Value.fromBigInt(<BigInt>value));
+    }
   }
 }

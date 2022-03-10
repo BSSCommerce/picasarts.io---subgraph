@@ -1,6 +1,0 @@
-export const MINT: string = "MINT"
-export const TRANSFER: string = "TRANSFER"
-export const BURN: string = "BURN"
-export const SALE: string = "SALE"
-export const LISTING: string = "LISTING"
-export const OFFER: string = "OFFER"

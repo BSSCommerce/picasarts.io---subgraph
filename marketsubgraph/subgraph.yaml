@@ -6,7 +6,8 @@ dataSources:
     name: Contract
     network: near-testnet
     source:
-      account: "market.dungbss.testnet"
+      account: "market1.dungbss.testnet"
+      startBlock: 84465901
     mapping:
       apiVersion: 0.0.5
       language: wasm/assemblyscript
