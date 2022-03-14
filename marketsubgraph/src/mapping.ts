@@ -30,7 +30,7 @@ function handleAction(
     const receiptId = receipt.id.toBase58()
     // Maps the JSON formatted log to the LOG entity
     let activity = new Activity(`${receiptId}`)
-
+    let activity_old_bid = new Activity(`${receiptId}||bid`)
     // Standard receipt properties
     activity.blockTime = BigInt.fromU64(blockHeader.timestampNanosec / 1000000)
     activity.from = receipt.signerId
@@ -57,11 +57,11 @@ function handleAction(
                 for(let m = 0; m < paramObject.entries.length; m++){
                   let key = paramObject.entries[m].key.toString()
                   switch (true) {
-                    case key == 'token_id':
-                      activity.token_id = paramObject.entries[m].value.toString()
+                    case key == 'contract_and_token_id':
+                      activity.token_id = paramObject.entries[m].value.toString().split('||')[1]
                       break
                     case key == 'ft_token_id':
-                      activity.token_id = paramObject.entries[m].value.toString()
+                      activity.ft_token_id = paramObject.entries[m].value.toString()
                       break
                     case key == 'price':
                       activity.price = paramObject.entries[m].value.kind != JSONValueKind.NULL ? BigInt.fromString(paramObject.entries[m].value.toString()) : null
@@ -69,10 +69,21 @@ function handleAction(
                     case key == 'owner_id':
                       activity.to = paramObject.entries[m].value.toString()
                       break
+                    case key == 'old_bid_id':
+                      activity_old_bid.to = paramObject.entries[m].value.toString()
+                      activity_old_bid.type = 'OFFER:REMOVE_BID'
                   }
                 }
             }
           }
+        }
+        if (activity_old_bid.to) {
+          activity_old_bid.blockTime = activity.blockTime
+          activity_old_bid.ft_token_id = activity.ft_token_id
+          activity_old_bid.token_id = activity.token_id
+          activity_old_bid.price = activity.price
+          activity_old_bid.from = activity.to
+          activity_old_bid.save()
         }
         activity.save()
       }
