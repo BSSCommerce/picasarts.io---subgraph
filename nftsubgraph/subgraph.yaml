@@ -8,8 +8,8 @@ dataSources:
     name: receipts
     network: near-testnet
     source:
-      account: "dungbss.testnet"
-      startBlock: 84621843
+      account: "picasarts.testnet"
+      startBlock: 88454883
     mapping:
       apiVersion: 0.0.5
       language: wasm/assemblyscript

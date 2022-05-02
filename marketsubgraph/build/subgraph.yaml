@@ -1,4 +1,5 @@
-specVersion: 0.0.2
+specVersion: 0.0.3
+repository: https://github.com/dungntbss/picasarts-subgraph
 schema:
   file: schema.graphql
 dataSources:
@@ -6,8 +7,8 @@ dataSources:
     name: Contract
     network: near-testnet
     source:
-      account: market1.dungbss.testnet
-      startBlock: 84945139
+      account: market.picasarts.testnet
+      startBlock: 88454883
     mapping:
       apiVersion: 0.0.5
       language: wasm/assemblyscript
@@ -15,4 +16,4 @@ dataSources:
         - ExampleEntity
       receiptHandlers:
         - handler: handleReceipt
-      file: Contract/Contract.wasm
+      file: Contract\Contract.wasm
