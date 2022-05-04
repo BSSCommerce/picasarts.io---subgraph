@@ -60,6 +60,9 @@ function handleAction(
                     case key == 'contract_and_token_id':
                       activity.token_id = paramObject.entries[m].value.toString().split('||')[1]
                       break
+                    case key == 'token_id':
+                      activity.token_id = paramObject.entries[m].value.toString()
+                      break
                     case key == 'ft_token_id':
                       activity.ft_token_id = paramObject.entries[m].value.toString()
                       break

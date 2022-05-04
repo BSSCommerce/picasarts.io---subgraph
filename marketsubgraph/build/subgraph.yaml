@@ -16,4 +16,4 @@ dataSources:
         - ExampleEntity
       receiptHandlers:
         - handler: handleReceipt
-      file: Contract\Contract.wasm
+      file: Contract/Contract.wasm
